@@ -1,56 +1,46 @@
 package uz.fido.hotelcrud.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import uz.fido.hotelcrud.entity.Hotel;
+import uz.fido.hotelcrud.entity.Room;
 import uz.fido.hotelcrud.repository.HotelRepository;
-import uz.fido.hotelcrud.responce.ApiResponse;
+import uz.fido.hotelcrud.repository.RoomRepository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class HotelService {
     @Autowired
     HotelRepository hotelRepository;
+    @Autowired
+    RoomRepository roomRepository;
 
-    public ApiResponse getAllHotel() {
-        List<Hotel> hotels = hotelRepository.findAll();
-        return new ApiResponse("Hotel List", true, hotels);
+    public List<Hotel> findAllHotels() {
+        return hotelRepository.findAll();
     }
 
+    public Hotel findHotelById(Long id) {
+        return hotelRepository.findById(id).get();
+    }
 
-    public ApiResponse addHotel(Hotel hotel) {
-        if (!hotelRepository.existsByName(hotel.getName())) {
-            Hotel save = hotelRepository.save(hotel);
-            return new ApiResponse("Hotel added successfully", true, save);
+    public Hotel saveHotel(Hotel hotel) {
+        for (Room room : hotel.getRooms()) {
+            if (!roomRepository.existsByNumber(room.getNumber()))
+                roomRepository.save(room);
         }
-        return new ApiResponse("Hotel with this model already exist", false);
 
+        return hotelRepository.save(hotel);
     }
 
-    public ApiResponse deleteHotel(Integer id){
-        if (hotelRepository.existsById(id)) {
-            hotelRepository.deleteById(id);
-            return new ApiResponse("Found and deleted",true);
-        }
-        return new ApiResponse("Hotel does not exist",false);
+    public void deleteHotelById(Long id) {
+        hotelRepository.deleteById(id);
     }
 
-
-    public ApiResponse editHotel(Integer id,Hotel hotel) {
-        if (hotelRepository.existsById(id)) {
-            Optional<Hotel> byId = hotelRepository.findById(id);
-            Hotel hotel1 = byId.get();
-            hotel1.setName(hotel.getName());
-            Hotel save = hotelRepository.save(hotel1);
-            return new ApiResponse("Found and updated",true,save);
-        }
-        return new ApiResponse("Hotel does not exist",false);
+    public Page<Room> findRoomsByHotelId(Long hotelId, Pageable pageable) {
+        return hotelRepository.findRoomsByHotelId(hotelId, pageable);
     }
-
-
-
-
 
 }

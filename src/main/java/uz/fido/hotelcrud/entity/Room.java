@@ -16,6 +16,7 @@ public class Room {
     private Integer number;
     private Integer floor;
     private Integer size;
+
     @ManyToOne
     private Hotel hotel;
 
